@@ -152,9 +152,8 @@ void drawSupportWalls() {
 
 void drawOutflowWater() {
     if (gateOpen > 0) {
-        glColor3f(0.34f, 0.70f, 0.92f); // aerated outflow water
+        glColor3f(0.34f, 0.70f, 0.92f);
         
-        // Water flowing out from both gates on downstream side
         float outflowHeight = gateOpen / 2.0f + 0.5f;
         float outflowX = 4.0f;  // Starting exactly under gates
         float outflowLength = 6.0f; // flowing stream length
@@ -214,15 +213,15 @@ void keyboard(unsigned char key, int x, int y) {
     if (waterHeight > 10) waterHeight = 10;
 
     if (gateOpen < 0) gateOpen = 0;
-    if (gateOpen > 4) gateOpen = 4;  // max 2x gate height
+    if (gateOpen > 4) gateOpen = 4;
 
     glutPostRedisplay();
 }
 
 void mouse(int button, int state, int x, int y) {
     if (state == GLUT_DOWN) {
-        if (button == 3) camZ -= 1;   // zoom in
-        if (button == 4) camZ += 1;   // zoom out
+        if (button == 3) camZ -= 1;
+        if (button == 4) camZ += 1;
 
         if (camZ < 10) camZ = 10;
         if (camZ > 40) camZ = 40;
@@ -233,7 +232,7 @@ void mouse(int button, int state, int x, int y) {
 
 void init() {
     glEnable(GL_DEPTH_TEST);
-    glClearColor(0.70f, 0.85f, 0.95f, 1.0f); // sky background
+    glClearColor(0.70f, 0.85f, 0.95f, 1.0f);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
