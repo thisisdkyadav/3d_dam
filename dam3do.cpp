@@ -138,7 +138,7 @@ void drawSupportWalls() {
     
     // 3 vertical support walls extending outside the dam on downstream side
     float yBottom = 0.0f, yTop = 4.0f;
-    float xStart = 4.0f, xEnd = 8.0f;  // extending exactly from the dam's face
+    float xStart = 4.0f, xEnd = 6.0f;  // shorter projection from the dam face
     float thickness = 0.3f;
     
     // Wall positions at different z coordinates
