@@ -57,12 +57,12 @@ void drawCuboid(float x, float y, float z, float w, float h, float d) {
 }
 
 void drawGround() {
-    glColor3f(0.3, 0.8, 0.3);
+    glColor3f(0.38f, 0.56f, 0.30f); // earthy grass
     drawCuboid(-15, -1, -8, 30, 1, 16);
 }
 
 void drawDam() {
-    glColor3f(0.5, 0.5, 0.5);
+    glColor3f(0.62f, 0.62f, 0.60f); // concrete
 
     float xL0 = 0.5f, xL1 = 1.5f; // upstream face slopes inward with height
     float xR = 4.0f;
@@ -86,7 +86,7 @@ void drawDam() {
 }
 
 void drawReservoirWater() {
-    glColor3f(0, 0.4, 1);
+    glColor3f(0.10f, 0.34f, 0.66f); // deep reservoir water
 
     float xL = -10.0f;
     float xR0 = 0.5f;
@@ -111,7 +111,7 @@ void drawReservoirWater() {
 }
 
 void drawSingleGate(float zCenter, float gateWidth) {
-    glColor3f(0.1, 0.1, 0.8);  // Blue color to make gates visible
+    glColor3f(0.26f, 0.28f, 0.30f);  // steel gate
     
     // Gate positioned on support walls on downstream side
     // Opens upward (gate moves up as gateOpen increases)
@@ -134,7 +134,7 @@ void drawGates() {
 }
 
 void drawSupportWalls() {
-    glColor3f(0.4, 0.4, 0.4);
+    glColor3f(0.52f, 0.52f, 0.50f); // reinforced concrete walls
     
     // 3 vertical support walls extending outside the dam on downstream side
     float yBottom = 0.0f, yTop = 4.0f;
@@ -152,7 +152,7 @@ void drawSupportWalls() {
 
 void drawOutflowWater() {
     if (gateOpen > 0) {
-        glColor3f(0, 0.5, 1);
+        glColor3f(0.34f, 0.70f, 0.92f); // aerated outflow water
         
         // Water flowing out from both gates on downstream side
         float outflowHeight = gateOpen / 2.0f + 0.5f;
@@ -233,6 +233,7 @@ void mouse(int button, int state, int x, int y) {
 
 void init() {
     glEnable(GL_DEPTH_TEST);
+    glClearColor(0.70f, 0.85f, 0.95f, 1.0f); // sky background
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
