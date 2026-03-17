@@ -56,46 +56,32 @@ void drawCuboid(float x, float y, float z, float w, float h, float d) {
     glEnd();
 }
 
-void drawTerrain() {
-    // Flat river bed
-    glColor3f(0.2, 0.5, 0.2);
-    drawCuboid(-15, -1, -4, 30, 1, 8);
-
-    // Left mountain slope
-    glColor3f(0.3, 0.6, 0.3);
-    glBegin(GL_QUADS);
-    glVertex3f(-15, 0, -4);  glVertex3f(15, 0, -4);
-    glVertex3f(15, 10, -12); glVertex3f(-15, 10, -12);
-    glEnd();
-
-    // Right mountain slope
-    glBegin(GL_QUADS);
-    glVertex3f(-15, 0, 4);   glVertex3f(15, 0, 4);
-    glVertex3f(15, 10, 12);  glVertex3f(-15, 10, 12);
-    glEnd();
+void drawGround() {
+    glColor3f(0.3, 0.8, 0.3);
+    drawCuboid(-15, -1, -8, 30, 1, 16);
 }
 
 void drawDam() {
     glColor3f(0.5, 0.5, 0.5);
 
     float xL0 = 0.5f, xL1 = 1.5f; // upstream face slopes inward with height
-    float xR0 = 4.0f, xR1 = 2.5f; // downstream face tapering in
+    float xR = 4.0f;
     float y0 = 0.0f, y1 = 8.0f;
     float z0 = -4.0f, z1 = 4.0f;
 
     glBegin(GL_QUADS);
     // Front
-    glVertex3f(xL0, y0, z1); glVertex3f(xR0, y0, z1); glVertex3f(xR1, y1, z1); glVertex3f(xL1, y1, z1);
+    glVertex3f(xL0, y0, z1); glVertex3f(xR, y0, z1); glVertex3f(xR, y1, z1); glVertex3f(xL1, y1, z1);
     // Back
-    glVertex3f(xL0, y0, z0); glVertex3f(xL1, y1, z0); glVertex3f(xR1, y1, z0); glVertex3f(xR0, y0, z0);
+    glVertex3f(xL0, y0, z0); glVertex3f(xL1, y1, z0); glVertex3f(xR, y1, z0); glVertex3f(xR, y0, z0);
     // Upstream inclined face (touches reservoir)
     glVertex3f(xL0, y0, z0); glVertex3f(xL0, y0, z1); glVertex3f(xL1, y1, z1); glVertex3f(xL1, y1, z0);
-    // Downstream sloped face
-    glVertex3f(xR0, y0, z0); glVertex3f(xR0, y0, z1); glVertex3f(xR1, y1, z1); glVertex3f(xR1, y1, z0);
+    // Downstream face
+    glVertex3f(xR, y0, z0); glVertex3f(xR, y1, z0); glVertex3f(xR, y1, z1); glVertex3f(xR, y0, z1);
     // Top
-    glVertex3f(xL1, y1, z0); glVertex3f(xL1, y1, z1); glVertex3f(xR1, y1, z1); glVertex3f(xR1, y1, z0);
+    glVertex3f(xL1, y1, z0); glVertex3f(xL1, y1, z1); glVertex3f(xR, y1, z1); glVertex3f(xR, y1, z0);
     // Bottom
-    glVertex3f(xL0, y0, z0); glVertex3f(xR0, y0, z0); glVertex3f(xR0, y0, z1); glVertex3f(xL0, y0, z1);
+    glVertex3f(xL0, y0, z0); glVertex3f(xR, y0, z0); glVertex3f(xR, y0, z1); glVertex3f(xL0, y0, z1);
     glEnd();
 }
 
@@ -124,33 +110,61 @@ void drawReservoirWater() {
     glEnd();
 }
 
-void drawGate() {
-    // A simple sluice gate on the sloped downstream face
-    glColor3f(0.2, 0.2, 0.2);
-    // Position it at the bottom of the dam
+void drawSingleGate(float zCenter, float gateWidth) {
+    glColor3f(0.1, 0.1, 0.8);  // Blue color to make gates visible
+    
+    // Gate positioned on support walls on downstream side
+    // Opens upward (gate moves up as gateOpen increases)
+    float gateThickness = 0.2f;
     float gateHeight = 2.0f;
-    float gateY = gateOpen * 0.5f; 
-    drawCuboid(3.8, gateY, -1.2, 0.4, gateHeight, 2.4);
+    
+    float xStart = 4.0f;   // Start exactly at downstream face of dam
+    float yOffset = gateOpen * 0.5f;  // vertical offset when opening
+    float z0 = zCenter - gateWidth / 2.0f;
+    
+    drawCuboid(xStart, yOffset, z0, gateThickness, gateHeight, gateWidth);
+}
+
+void drawGates() {
+    // Draw 2 gates
+    // Support wall inner edges are precisely at -1.85 to -0.15, and 0.15 to 1.85
+    // Centers are -1.0 and 1.0, widths of exactly 1.7f will fit securely between walls
+    drawSingleGate(-1.0f, 1.7f);   // Left gate
+    drawSingleGate(1.0f, 1.7f);    // Right gate
+}
+
+void drawSupportWalls() {
+    glColor3f(0.4, 0.4, 0.4);
+    
+    // 3 vertical support walls extending outside the dam on downstream side
+    float yBottom = 0.0f, yTop = 4.0f;
+    float xStart = 4.0f, xEnd = 8.0f;  // extending exactly from the dam's face
+    float thickness = 0.3f;
+    
+    // Wall positions at different z coordinates
+    float wallZPositions[] = {-2.0f, 0.0f, 2.0f};
+    
+    for (int i = 0; i < 3; i++) {
+        float z = wallZPositions[i];
+        drawCuboid(xStart, yBottom, z - thickness/2.0f, xEnd - xStart, yTop, thickness);
+    }
 }
 
 void drawOutflowWater() {
     if (gateOpen > 0) {
-        glColor3f(0, 0.6, 1);
-        // Draw a basic parabolic water flow shooting out of the gate
-        glBegin(GL_QUAD_STRIP);
-        for (int i = 0; i <= 10; i++) {
-            float t = i / 10.0f;
-            float x = 4.0f + t * 8.0f;                       // shoots outward 8 units
-            float y = (gateOpen * 0.6f) - (t * t * 5.0f);    // parabolic drop
-            if (y < 0.1f) y = 0.1f;                          // splash on riverbed
-
-            glVertex3f(x, y, -1.0f);
-            glVertex3f(x, y,  1.0f);
-        }
-        glEnd();
+        glColor3f(0, 0.5, 1);
         
-        // Stilling basin flow (water continuing on the riverbed)
-        drawCuboid(4.0f, 0, -1.2, 10.0f, 0.2f + gateOpen*0.1f, 2.4f);
+        // Water flowing out from both gates on downstream side
+        float outflowHeight = gateOpen / 2.0f + 0.5f;
+        float outflowX = 4.0f;  // Starting exactly under gates
+        float outflowLength = 6.0f; // flowing stream length
+        float outflowDepth = 1.7f;  // match the width of gates perfectly
+        
+        // Left outflow (z spans -1.85 to -0.15 to precisely match gate inside walls)
+        drawCuboid(outflowX, 0, -1.85f, outflowLength, outflowHeight, outflowDepth);
+        
+        // Right outflow (z spans 0.15 to 1.85 to precisely match gate inside walls)
+        drawCuboid(outflowX, 0, 0.15f, outflowLength, outflowHeight, outflowDepth);
     }
 }
 
@@ -167,10 +181,11 @@ void display() {
     glRotatef(angleX, 1, 0, 0);
     glRotatef(angleY, 0, 1, 0);
 
-    drawTerrain();
+    drawGround();
     drawReservoirWater();
     drawDam();
-    drawGate();
+    drawGates();
+    drawSupportWalls();
     drawOutflowWater();
 
     glutSwapBuffers();
@@ -188,7 +203,7 @@ void keyboard(unsigned char key, int x, int y) {
         case 'i': waterHeight += 1; break;
         case 'k': waterHeight -= 1; break;
 
-        // Gate control
+        // Gate control (gate height is 2, max liftable to 2x = 4 units)
         case 'o': gateOpen += 1; break;
         case 'c': gateOpen -= 1; break;
 
@@ -199,7 +214,7 @@ void keyboard(unsigned char key, int x, int y) {
     if (waterHeight > 10) waterHeight = 10;
 
     if (gateOpen < 0) gateOpen = 0;
-    if (gateOpen > 6) gateOpen = 6;
+    if (gateOpen > 4) gateOpen = 4;  // max 2x gate height
 
     glutPostRedisplay();
 }
