@@ -1,153 +1,228 @@
 #include <GL/glut.h>
 #include <cstdlib>
 
-int waterLevel = 140;   // current reservoir level
-int gateOpen = 20;      // gate opening height
-int flow = 0;           // flow length animation
-int inflow = 1;         // water entering reservoir
+int angleX = 20;
+int angleY = -30;
 
-void drawText(float x, float y, const char* str) {
-    glRasterPos2f(x, y);
-    while (*str) {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *str);
-        str++;
+int camZ = 25;
+
+int waterHeight = 5;
+
+int gateOpen = 2;
+
+void drawCuboid(float x, float y, float z, float w, float h, float d) {
+    glBegin(GL_QUADS);
+
+    // Front
+    glVertex3f(x,     y,     z + d);
+    glVertex3f(x + w, y,     z + d);
+    glVertex3f(x + w, y + h, z + d);
+    glVertex3f(x,     y + h, z + d);
+
+    // Back
+    glVertex3f(x,     y,     z);
+    glVertex3f(x,     y + h, z);
+    glVertex3f(x + w, y + h, z);
+    glVertex3f(x + w, y,     z);
+
+    // Left
+    glVertex3f(x, y,     z);
+    glVertex3f(x, y,     z + d);
+    glVertex3f(x, y + h, z + d);
+    glVertex3f(x, y + h, z);
+
+    // Right
+    glVertex3f(x + w, y,     z);
+    glVertex3f(x + w, y + h, z);
+    glVertex3f(x + w, y + h, z + d);
+    glVertex3f(x + w, y,     z + d);
+
+    // Top
+    glVertex3f(x,     y + h, z);
+    glVertex3f(x,     y + h, z + d);
+    glVertex3f(x + w, y + h, z + d);
+    glVertex3f(x + w, y + h, z);
+
+    // Bottom
+    glVertex3f(x,     y, z);
+    glVertex3f(x + w, y, z);
+    glVertex3f(x + w, y, z + d);
+    glVertex3f(x,     y, z + d);
+
+    glEnd();
+}
+
+void drawGround() {
+    glColor3f(0.38f, 0.56f, 0.30f);
+    drawCuboid(-15, -1, -8, 30, 1, 16);
+}
+
+void drawDam() {
+    glColor3f(0.62f, 0.62f, 0.60f);
+
+    float xL0 = 0.5f, xL1 = 1.5f;
+    float xR = 4.0f;
+    float y0 = 0.0f, y1 = 8.0f;
+    float z0 = -4.0f, z1 = 4.0f;
+
+    glBegin(GL_QUADS);
+    glVertex3f(xL0, y0, z1); glVertex3f(xR, y0, z1); glVertex3f(xR, y1, z1); glVertex3f(xL1, y1, z1);
+    glVertex3f(xL0, y0, z0); glVertex3f(xL1, y1, z0); glVertex3f(xR, y1, z0); glVertex3f(xR, y0, z0);
+    glVertex3f(xL0, y0, z0); glVertex3f(xL0, y0, z1); glVertex3f(xL1, y1, z1); glVertex3f(xL1, y1, z0);
+    glVertex3f(xR, y0, z0); glVertex3f(xR, y1, z0); glVertex3f(xR, y1, z1); glVertex3f(xR, y0, z1);
+    glVertex3f(xL1, y1, z0); glVertex3f(xL1, y1, z1); glVertex3f(xR, y1, z1); glVertex3f(xR, y1, z0);
+    glVertex3f(xL0, y0, z0); glVertex3f(xR, y0, z0); glVertex3f(xR, y0, z1); glVertex3f(xL0, y0, z1);
+    glEnd();
+}
+
+void drawReservoirWater() {
+    glColor3f(0.10f, 0.34f, 0.66f);
+
+    float xL = -10.0f;
+    float xR0 = 0.5f;
+    float xR1 = 0.5f + waterHeight / 8.0f;
+    float y0 = 0.0f, y1 = (float)waterHeight;
+    float z0 = -4.0f, z1 = 4.0f;
+
+    glBegin(GL_QUADS);
+    glVertex3f(xL, y0, z1); glVertex3f(xR0, y0, z1); glVertex3f(xR1, y1, z1); glVertex3f(xL, y1, z1);
+    glVertex3f(xL, y0, z0); glVertex3f(xL, y1, z0); glVertex3f(xR1, y1, z0); glVertex3f(xR0, y0, z0);
+    glVertex3f(xL, y0, z0); glVertex3f(xL, y0, z1); glVertex3f(xL, y1, z1); glVertex3f(xL, y1, z0);
+    glVertex3f(xR0, y0, z0); glVertex3f(xR0, y0, z1); glVertex3f(xR1, y1, z1); glVertex3f(xR1, y1, z0);
+    glVertex3f(xL, y1, z0); glVertex3f(xL, y1, z1); glVertex3f(xR1, y1, z1); glVertex3f(xR1, y1, z0);
+    glVertex3f(xL, y0, z0); glVertex3f(xR0, y0, z0); glVertex3f(xR0, y0, z1); glVertex3f(xL, y0, z1);
+    glEnd();
+}
+
+void drawSingleGate(float zCenter, float gateWidth) {
+    glColor3f(0.26f, 0.28f, 0.30f);
+    
+    float gateThickness = 0.2f;
+    float gateHeight = 2.0f;
+    
+    float xStart = 4.0f;
+    float yOffset = gateOpen * 0.5f;
+    float z0 = zCenter - gateWidth / 2.0f;
+    
+    drawCuboid(xStart, yOffset, z0, gateThickness, gateHeight, gateWidth);
+}
+
+void drawGates() {
+    drawSingleGate(-1.0f, 1.7f);
+    drawSingleGate(1.0f, 1.7f);
+}
+
+void drawSupportWalls() {
+    glColor3f(0.52f, 0.52f, 0.50f);
+    
+    float yBottom = 0.0f, yTop = 4.0f;
+    float xStart = 4.0f, xEnd = 6.0f;
+    float thickness = 0.3f;
+    
+    float wallZPositions[] = {-2.0f, 0.0f, 2.0f};
+    
+    for (int i = 0; i < 3; i++) {
+        float z = wallZPositions[i];
+        drawCuboid(xStart, yBottom, z - thickness/2.0f, xEnd - xStart, yTop, thickness);
+    }
+}
+
+void drawOutflowWater() {
+    if (gateOpen > 0) {
+        glColor3f(0.34f, 0.70f, 0.92f);
+        
+        float outflowHeight = gateOpen / 2.0f + 0.5f;
+        float outflowX = 4.0f;
+        float outflowLength = 6.0f;
+        float outflowDepth = 1.7f;
+        
+        drawCuboid(outflowX, 0, -1.85f, outflowLength, outflowHeight, outflowDepth);
+        
+        drawCuboid(outflowX, 0, 0.15f, outflowLength, outflowHeight, outflowDepth);
     }
 }
 
 void display() {
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glLoadIdentity();
 
-    // Sky
-    glColor3f(0.8, 0.9, 1);
-    glBegin(GL_QUADS);
-        glVertex2i(0, 300);
-        glVertex2i(800, 300);
-        glVertex2i(800, 600);
-        glVertex2i(0, 600);
-    glEnd();
+    gluLookAt(
+        0, 8, camZ,
+        0, 3, 0,
+        0, 1, 0
+    );
 
-    // Ground
-    glColor3f(0.6, 0.8, 0.4);
-    glBegin(GL_QUADS);
-        glVertex2i(0, 0);
-        glVertex2i(800, 0);
-        glVertex2i(800, 300);
-        glVertex2i(0, 300);
-    glEnd();
+    glRotatef(angleX, 1, 0, 0);
+    glRotatef(angleY, 0, 1, 0);
 
-    // Reservoir water
-    glColor3f(0, 0.4, 1);
-    glBegin(GL_QUADS);
-        glVertex2i(50, 100);
-        glVertex2i(300, 100);
-        glVertex2i(300, waterLevel);
-        glVertex2i(50, waterLevel);
-    glEnd();
-
-    // Dam wall
-    glColor3f(0.5, 0.5, 0.5);
-    glBegin(GL_POLYGON);
-        glVertex2i(300, 100);
-        glVertex2i(380, 100);
-        glVertex2i(360, 260);
-        glVertex2i(300, 260);
-    glEnd();
-
-    // Gate opening
-    glColor3f(0.2, 0.2, 0.2);
-    glBegin(GL_QUADS);
-        glVertex2i(330, 100);
-        glVertex2i(350, 100);
-        glVertex2i(350, 100 + gateOpen);
-        glVertex2i(330, 100 + gateOpen);
-    glEnd();
-
-    // Flowing water from gate
-    if (gateOpen > 0) {
-        glColor3f(0, 0.5, 1);
-        glBegin(GL_QUADS);
-            glVertex2i(350, 100);
-            glVertex2i(350 + flow, 100);
-            glVertex2i(350 + flow, 100 + gateOpen / 2);
-            glVertex2i(350, 100 + gateOpen / 2);
-        glEnd();
-    }
-
-    // Downstream river
-    glColor3f(0, 0.4, 1);
-    glBegin(GL_QUADS);
-        glVertex2i(380, 80);
-        glVertex2i(780, 80);
-        glVertex2i(780, 120);
-        glVertex2i(380, 120);
-    glEnd();
-
-    // Labels
-    glColor3f(0, 0, 0);
-    drawText(20, 560, "Dam Reservoir Simulator");
-    drawText(20, 530, "W/S : Increase/Decrease Water Level");
-    drawText(20, 500, "O/C : Open/Close Gate");
-    drawText(20, 470, "ESC : Exit");
+    drawGround();
+    drawReservoirWater();
+    drawDam();
+    drawGates();
+    drawSupportWalls();
+    drawOutflowWater();
 
     glutSwapBuffers();
 }
 
-void update(int value) {
-    // basic water storage logic
-    int outflow = gateOpen / 10;
-    waterLevel = waterLevel + inflow - outflow;
-
-    if (waterLevel < 100) waterLevel = 100;
-    if (waterLevel > 250) waterLevel = 250;
-
-    if (gateOpen > 0) {
-        flow += 5;
-        if (flow > 200) flow = 50;
-    } else {
-        flow = 0;
-    }
-
-    glutPostRedisplay();
-    glutTimerFunc(100, update, 0);
-}
-
 void keyboard(unsigned char key, int x, int y) {
     switch (key) {
-        case 'w': waterLevel += 5; break;
-        case 's': waterLevel -= 5; break;
-        case 'o': gateOpen += 5; break;
-        case 'c': gateOpen -= 5; break;
+        case 'w': angleX -= 5; break;
+        case 's': angleX += 5; break;
+        case 'a': angleY -= 5; break;
+        case 'd': angleY += 5; break;
+
+        case 'i': waterHeight += 1; break;
+        case 'k': waterHeight -= 1; break;
+
+        case 'o': gateOpen += 1; break;
+        case 'c': gateOpen -= 1; break;
+
         case 27: exit(0);
     }
 
+    if (waterHeight < 1) waterHeight = 1;
+    if (waterHeight > 10) waterHeight = 10;
+
     if (gateOpen < 0) gateOpen = 0;
-    if (gateOpen > 80) gateOpen = 80;
-    if (waterLevel < 100) waterLevel = 100;
-    if (waterLevel > 250) waterLevel = 250;
+    if (gateOpen > 4) gateOpen = 4;
 
     glutPostRedisplay();
 }
 
+void mouse(int button, int state, int x, int y) {
+    if (state == GLUT_DOWN) {
+        if (button == 3) camZ -= 1;
+        if (button == 4) camZ += 1;
+
+        if (camZ < 10) camZ = 10;
+        if (camZ > 40) camZ = 40;
+
+        glutPostRedisplay();
+    }
+}
+
 void init() {
-    glClearColor(1, 1, 1, 1);
+    glEnable(GL_DEPTH_TEST);
+    glClearColor(0.70f, 0.85f, 0.95f, 1.0f);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D(0, 800, 0, 600);
+    gluPerspective(60, 1, 1, 100);
 
     glMatrixMode(GL_MODELVIEW);
 }
 
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-    glutInitWindowSize(800, 600);
-    glutCreateWindow("Dam Reservoir Simulator");
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitWindowSize(700, 700);
+    glutCreateWindow("3D Dam Reservoir Simulator");
 
     init();
     glutDisplayFunc(display);
     glutKeyboardFunc(keyboard);
-    glutTimerFunc(100, update, 0);
+    glutMouseFunc(mouse);
 
     glutMainLoop();
     return 0;
