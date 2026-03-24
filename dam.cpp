@@ -1,5 +1,6 @@
 #include <GL/glut.h>
 #include <cstdlib>
+#include <cmath>
 
 int angleX = 20;
 int angleY = -30;
@@ -10,40 +11,142 @@ int waterHeight = 5;
 
 int gateOpen = 2;
 
+GLuint groundTexture = 0;
+GLuint hillTexture = 0;
+GLuint damTexture = 0;
+
+void setNormalFromTriangle(
+    float ax, float ay, float az,
+    float bx, float by, float bz,
+    float cx, float cy, float cz
+) {
+    float ux = bx - ax;
+    float uy = by - ay;
+    float uz = bz - az;
+    float vx = cx - ax;
+    float vy = cy - ay;
+    float vz = cz - az;
+
+    float nx = uy * vz - uz * vy;
+    float ny = uz * vx - ux * vz;
+    float nz = ux * vy - uy * vx;
+
+    float len = sqrtf(nx * nx + ny * ny + nz * nz);
+    if (len < 1e-6f) {
+        glNormal3f(0.0f, 1.0f, 0.0f);
+        return;
+    }
+
+    glNormal3f(nx / len, ny / len, nz / len);
+}
+
+void beginTexturedDraw(GLuint textureId, float sScale, float tScale) {
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, textureId);
+
+    glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+    glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+
+    GLfloat sPlane[] = {sScale, 0.0f, 0.0f, 0.0f};
+    GLfloat tPlane[] = {0.0f, 0.0f, tScale, 0.0f};
+    glTexGenfv(GL_S, GL_OBJECT_PLANE, sPlane);
+    glTexGenfv(GL_T, GL_OBJECT_PLANE, tPlane);
+
+    glEnable(GL_TEXTURE_GEN_S);
+    glEnable(GL_TEXTURE_GEN_T);
+}
+
+void endTexturedDraw() {
+    glDisable(GL_TEXTURE_GEN_S);
+    glDisable(GL_TEXTURE_GEN_T);
+    glDisable(GL_TEXTURE_2D);
+}
+
+void createNoiseTexture(GLuint& textureId, unsigned char baseR, unsigned char baseG, unsigned char baseB, int variation) {
+    const int size = 64;
+    unsigned char data[size][size][3];
+
+    for (int y = 0; y < size; y++) {
+        for (int x = 0; x < size; x++) {
+            int noise = rand() % (2 * variation + 1) - variation;
+            int checker = ((x / 8 + y / 8) % 2 == 0) ? 8 : -8;
+
+            int r = (int)baseR + noise + checker;
+            int g = (int)baseG + noise + checker;
+            int b = (int)baseB + noise + checker;
+
+            if (r < 0) r = 0; if (r > 255) r = 255;
+            if (g < 0) g = 0; if (g > 255) g = 255;
+            if (b < 0) b = 0; if (b > 255) b = 255;
+
+            data[y][x][0] = (unsigned char)r;
+            data[y][x][1] = (unsigned char)g;
+            data[y][x][2] = (unsigned char)b;
+        }
+    }
+
+    glGenTextures(1, &textureId);
+    glBindTexture(GL_TEXTURE_2D, textureId);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, size, size, GL_RGB, GL_UNSIGNED_BYTE, data);
+}
+
+void initTextures() {
+    srand(7);
+    createNoiseTexture(groundTexture, 120, 92, 62, 18);
+    createNoiseTexture(hillTexture, 88, 130, 70, 20);
+    createNoiseTexture(damTexture, 150, 150, 145, 12);
+}
+
+void setSpecular(float intensity, float shininess) {
+    GLfloat spec[] = {intensity, intensity, intensity, 1.0f};
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
+}
+
 void drawCuboid(float x, float y, float z, float w, float h, float d) {
     glBegin(GL_QUADS);
 
     // Front
+    glNormal3f(0.0f, 0.0f, 1.0f);
     glVertex3f(x,     y,     z + d);
     glVertex3f(x + w, y,     z + d);
     glVertex3f(x + w, y + h, z + d);
     glVertex3f(x,     y + h, z + d);
 
     // Back
+    glNormal3f(0.0f, 0.0f, -1.0f);
     glVertex3f(x,     y,     z);
     glVertex3f(x,     y + h, z);
     glVertex3f(x + w, y + h, z);
     glVertex3f(x + w, y,     z);
 
     // Left
+    glNormal3f(-1.0f, 0.0f, 0.0f);
     glVertex3f(x, y,     z);
     glVertex3f(x, y,     z + d);
     glVertex3f(x, y + h, z + d);
     glVertex3f(x, y + h, z);
 
     // Right
+    glNormal3f(1.0f, 0.0f, 0.0f);
     glVertex3f(x + w, y,     z);
     glVertex3f(x + w, y + h, z);
     glVertex3f(x + w, y + h, z + d);
     glVertex3f(x + w, y,     z + d);
 
     // Top
+    glNormal3f(0.0f, 1.0f, 0.0f);
     glVertex3f(x,     y + h, z);
     glVertex3f(x,     y + h, z + d);
     glVertex3f(x + w, y + h, z + d);
     glVertex3f(x + w, y + h, z);
 
     // Bottom
+    glNormal3f(0.0f, -1.0f, 0.0f);
     glVertex3f(x,     y, z);
     glVertex3f(x + w, y, z);
     glVertex3f(x + w, y, z + d);
@@ -54,11 +157,16 @@ void drawCuboid(float x, float y, float z, float w, float h, float d) {
 
 void drawGround() {
     glColor3f(0.45f, 0.35f, 0.25f); // Riverbed dirt/brown color
+    setSpecular(0.08f, 8.0f);
+    beginTexturedDraw(groundTexture, 0.12f, 0.12f);
     drawCuboid(-24, -1, -33, 42, 1, 66);
+    endTexturedDraw();
 }
 
 void drawDam() {
     glColor3f(0.62f, 0.62f, 0.60f);
+    setSpecular(0.30f, 32.0f);
+    beginTexturedDraw(damTexture, 0.25f, 0.12f);
 
     float xL0 = 0.5f, xL1 = 1.5f;
     float xR = 4.0f;
@@ -70,23 +178,35 @@ void drawDam() {
 
     glBegin(GL_QUADS);
     // Top
+    setNormalFromTriangle(xL0, y1, z1_y1, xR, y1, z1_y1, xR, y1, z0_y1);
     glVertex3f(xL0, y1, z1_y1); glVertex3f(xR, y1, z1_y1); glVertex3f(xR, y1, z0_y1); glVertex3f(xL0, y1, z0_y1);
     // Bottom
+    setNormalFromTriangle(xL0, y0, z0_y0, xR, y0, z0_y0, xR, y0, z1_y0);
     glVertex3f(xL0, y0, z0_y0); glVertex3f(xR, y0, z0_y0); glVertex3f(xR, y0, z1_y0); glVertex3f(xL0, y0, z1_y0);
     // Front facing water
+    setNormalFromTriangle(xL0, y0, z1_y0, xL1, y1, z1_y1, xL1, y1, z0_y1);
     glVertex3f(xL0, y0, z1_y0); glVertex3f(xL1, y1, z1_y1); glVertex3f(xL1, y1, z0_y1); glVertex3f(xL0, y0, z0_y0);
     // Back block (spillway slope)
+    setNormalFromTriangle(xR, y0, z0_y0, xR, y1, z0_y1, xR, y1, z1_y1);
     glVertex3f(xR, y0, z0_y0); glVertex3f(xR, y1, z0_y1); glVertex3f(xR, y1, z1_y1); glVertex3f(xR, y0, z1_y0);
     
     // Left side (inclined)
+    setNormalFromTriangle(xL0, y0, z0_y0, xL1, y1, z0_y1, xR, y1, z0_y1);
     glVertex3f(xL0, y0, z0_y0); glVertex3f(xL1, y1, z0_y1); glVertex3f(xR, y1, z0_y1); glVertex3f(xR, y0, z0_y0);
     // Right side (inclined)
+    setNormalFromTriangle(xR, y0, z1_y0, xR, y1, z1_y1, xL1, y1, z1_y1);
     glVertex3f(xR, y0, z1_y0); glVertex3f(xR, y1, z1_y1); glVertex3f(xL1, y1, z1_y1); glVertex3f(xL0, y0, z1_y0);
     glEnd();
+
+    endTexturedDraw();
 }
 
 void drawReservoirWater() {
-    glColor3f(0.10f, 0.34f, 0.66f);
+    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glColor4f(0.10f, 0.34f, 0.66f, 0.80f);
+    setSpecular(0.65f, 96.0f);
 
     float xL = -24.0f;
     float xR0 = 0.5f;
@@ -99,23 +219,33 @@ void drawReservoirWater() {
 
     glBegin(GL_QUADS);
     // Top
+    setNormalFromTriangle(xL, y1, z1_y1, xR1, y1, z1_y1, xR1, y1, z0_y1);
     glVertex3f(xL, y1, z1_y1); glVertex3f(xR1, y1, z1_y1); glVertex3f(xR1, y1, z0_y1); glVertex3f(xL, y1, z0_y1);
     // Bottom
+    setNormalFromTriangle(xL, y0, z0_y0, xL, y0, z1_y0, xR0, y0, z1_y0);
     glVertex3f(xL, y0, z0_y0); glVertex3f(xL, y0, z1_y0); glVertex3f(xR0, y0, z1_y0); glVertex3f(xR0, y0, z0_y0);
     // Front face against dam
+    setNormalFromTriangle(xR0, y0, z0_y0, xR0, y0, z1_y0, xR1, y1, z1_y1);
     glVertex3f(xR0, y0, z0_y0); glVertex3f(xR0, y0, z1_y0); glVertex3f(xR1, y1, z1_y1); glVertex3f(xR1, y1, z0_y1);
     // Back face (far water edge)
+    setNormalFromTriangle(xL, y0, z1_y0, xL, y0, z0_y0, xL, y1, z0_y1);
     glVertex3f(xL, y0, z1_y0); glVertex3f(xL, y0, z0_y0); glVertex3f(xL, y1, z0_y1); glVertex3f(xL, y1, z1_y1);
     
     // Left edge (inclined)
+    setNormalFromTriangle(xL, y1, z0_y1, xR1, y1, z0_y1, xR0, y0, z0_y0);
     glVertex3f(xL, y1, z0_y1); glVertex3f(xR1, y1, z0_y1); glVertex3f(xR0, y0, z0_y0); glVertex3f(xL, y0, z0_y0);
     // Right edge (inclined)
+    setNormalFromTriangle(xL, y0, z1_y0, xR0, y0, z1_y0, xR1, y1, z1_y1);
     glVertex3f(xL, y0, z1_y0); glVertex3f(xR0, y0, z1_y0); glVertex3f(xR1, y1, z1_y1); glVertex3f(xL, y1, z1_y1);
     glEnd();
+
+    glDisable(GL_BLEND);
 }
 
 void drawSingleGate(float zCenter, float gateWidth) {
+    glDisable(GL_TEXTURE_2D);
     glColor3f(0.26f, 0.28f, 0.30f);
+    setSpecular(0.45f, 40.0f);
     
     float gateThickness = 0.2f;
     float gateHeight = 2.0f;
@@ -136,7 +266,9 @@ void drawGates() {
 }
 
 void drawSupportWalls() {
+    glDisable(GL_TEXTURE_2D);
     glColor3f(0.52f, 0.52f, 0.50f);
+    setSpecular(0.26f, 22.0f);
     
     float yBottom = 0.0f, yTop = 4.0f;
     float xStart = 4.0f, xEnd = 6.0f;
@@ -152,7 +284,11 @@ void drawSupportWalls() {
 
 void drawOutflowWater() {
     if (gateOpen > 0) {
-        glColor3f(0.34f, 0.70f, 0.92f);
+        glDisable(GL_TEXTURE_2D);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glColor4f(0.34f, 0.70f, 0.92f, 0.78f);
+        setSpecular(0.55f, 72.0f);
         
         float y0 = 0.0f;
         float outflowHeight = gateOpen / 2.0f + 0.5f;
@@ -167,24 +303,34 @@ void drawOutflowWater() {
 
         glBegin(GL_QUADS);
         // Top
+        setNormalFromTriangle(x0, outflowHeight, z1_y1, x1, outflowHeight, z1_y1, x1, outflowHeight, z0_y1);
         glVertex3f(x0, outflowHeight, z1_y1); glVertex3f(x1, outflowHeight, z1_y1); glVertex3f(x1, outflowHeight, z0_y1); glVertex3f(x0, outflowHeight, z0_y1);
         // Bottom
+        setNormalFromTriangle(x0, y0, z0_y0, x1, y0, z0_y0, x1, y0, z1_y0);
         glVertex3f(x0, y0, z0_y0); glVertex3f(x1, y0, z0_y0); glVertex3f(x1, y0, z1_y0); glVertex3f(x0, y0, z1_y0);
         // Front face (against the gates/dam base)
+        setNormalFromTriangle(x0, y0, z0_y0, x0, y0, z1_y0, x0, outflowHeight, z1_y1);
         glVertex3f(x0, y0, z0_y0); glVertex3f(x0, y0, z1_y0); glVertex3f(x0, outflowHeight, z1_y1); glVertex3f(x0, outflowHeight, z0_y1);
         // Back edge (flowing out)
+        setNormalFromTriangle(x1, y0, z1_y0, x1, y0, z0_y0, x1, outflowHeight, z0_y1);
         glVertex3f(x1, y0, z1_y0); glVertex3f(x1, y0, z0_y0); glVertex3f(x1, outflowHeight, z0_y1); glVertex3f(x1, outflowHeight, z1_y1);
         
         // Left side (inclined to meet hill)
+        setNormalFromTriangle(x0, y0, z0_y0, x1, y0, z0_y0, x1, outflowHeight, z0_y1);
         glVertex3f(x0, y0, z0_y0); glVertex3f(x1, y0, z0_y0); glVertex3f(x1, outflowHeight, z0_y1); glVertex3f(x0, outflowHeight, z0_y1);
         // Right side (inclined to meet hill)
+        setNormalFromTriangle(x1, y0, z1_y0, x0, y0, z1_y0, x0, outflowHeight, z1_y1);
         glVertex3f(x1, y0, z1_y0); glVertex3f(x0, y0, z1_y0); glVertex3f(x0, outflowHeight, z1_y1); glVertex3f(x1, outflowHeight, z1_y1);
         glEnd();
+
+        glDisable(GL_BLEND);
     }
 }
 
 void drawHills() {
     glColor3f(0.38f, 0.56f, 0.30f); // Hill color (green)
+    setSpecular(0.12f, 12.0f);
+    beginTexturedDraw(hillTexture, 0.10f, 0.10f);
 
     float x0 = -24.0f, x1 = 18.0f;
     float y0 = 0.0f, y1 = 8.0f;
@@ -198,26 +344,38 @@ void drawHills() {
 
     glBegin(GL_QUADS);
     // Left hill slope (touches dam/water at z0_yX)
+    setNormalFromTriangle(x0, y1, zOuterL, x1, y1, zOuterL, x1, y1, z0_y1);
     glVertex3f(x0, y1, zOuterL); glVertex3f(x1, y1, zOuterL); glVertex3f(x1, y1, z0_y1); glVertex3f(x0, y1, z0_y1); // Top flat part of hill
+    setNormalFromTriangle(x0, y1, z0_y1, x1, y1, z0_y1, x1, y0, z0_y0);
     glVertex3f(x0, y1, z0_y1); glVertex3f(x1, y1, z0_y1); glVertex3f(x1, y0, z0_y0); glVertex3f(x0, y0, z0_y0); // Sloping down to water
     
     // Right hill slope (touches dam/water at z1_yX)
+    setNormalFromTriangle(x0, y0, z1_y0, x1, y0, z1_y0, x1, y1, z1_y1);
     glVertex3f(x0, y0, z1_y0); glVertex3f(x1, y0, z1_y0); glVertex3f(x1, y1, z1_y1); glVertex3f(x0, y1, z1_y1); // Sloping UP from water
+    setNormalFromTriangle(x0, y1, z1_y1, x1, y1, z1_y1, x1, y1, zOuterR);
     glVertex3f(x0, y1, z1_y1); glVertex3f(x1, y1, z1_y1); glVertex3f(x1, y1, zOuterR); glVertex3f(x0, y1, zOuterR); // Top flat part of hill
     
     // Left hill outer edge (back face)
+    setNormalFromTriangle(x0, y0, zOuterL, x1, y0, zOuterL, x1, y1, zOuterL);
     glVertex3f(x0, y0, zOuterL); glVertex3f(x1, y0, zOuterL); glVertex3f(x1, y1, zOuterL); glVertex3f(x0, y1, zOuterL);
     // Right hill outer edge (back face)
+    setNormalFromTriangle(x0, y0, zOuterR, x1, y0, zOuterR, x1, y1, zOuterR);
     glVertex3f(x0, y0, zOuterR); glVertex3f(x1, y0, zOuterR); glVertex3f(x1, y1, zOuterR); glVertex3f(x0, y1, zOuterR);
     
     // Left hill end caps (Front/Back)
+    setNormalFromTriangle(x0, y0, z0_y0, x0, y1, z0_y1, x0, y1, zOuterL);
     glVertex3f(x0, y0, z0_y0); glVertex3f(x0, y1, z0_y1); glVertex3f(x0, y1, zOuterL); glVertex3f(x0, y0, zOuterL);
+    setNormalFromTriangle(x1, y0, z0_y0, x1, y0, zOuterL, x1, y1, zOuterL);
     glVertex3f(x1, y0, z0_y0); glVertex3f(x1, y0, zOuterL); glVertex3f(x1, y1, zOuterL); glVertex3f(x1, y1, z0_y1);
 
     // Right hill end caps (Front/Back)
+    setNormalFromTriangle(x0, y0, z1_y0, x0, y0, zOuterR, x0, y1, zOuterR);
     glVertex3f(x0, y0, z1_y0); glVertex3f(x0, y0, zOuterR); glVertex3f(x0, y1, zOuterR); glVertex3f(x0, y1, z1_y1);
+    setNormalFromTriangle(x1, y0, z1_y0, x1, y1, z1_y1, x1, y1, zOuterR);
     glVertex3f(x1, y0, z1_y0); glVertex3f(x1, y1, z1_y1); glVertex3f(x1, y1, zOuterR); glVertex3f(x1, y0, zOuterR);
     glEnd();
+
+    endTexturedDraw();
 }
 
 void display() {
@@ -229,6 +387,11 @@ void display() {
         0, 3, 0,
         0, 1, 0
     );
+
+    GLfloat light0Position[] = {18.0f, 28.0f, 24.0f, 1.0f};
+    GLfloat light1Position[] = {-20.0f, 10.0f, -26.0f, 1.0f};
+    glLightfv(GL_LIGHT0, GL_POSITION, light0Position);
+    glLightfv(GL_LIGHT1, GL_POSITION, light1Position);
 
     glRotatef(angleX, 1, 0, 0);
     glRotatef(angleY, 0, 1, 0);
@@ -285,6 +448,30 @@ void init() {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LINE_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHT1);
+    glEnable(GL_NORMALIZE);
+    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+
+    glEnable(GL_COLOR_MATERIAL);
+    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+
+    GLfloat globalAmbient[] = {0.20f, 0.20f, 0.22f, 1.0f};
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, globalAmbient);
+
+    GLfloat light0Diffuse[] = {0.95f, 0.92f, 0.85f, 1.0f};
+    GLfloat light0Specular[] = {1.0f, 0.98f, 0.92f, 1.0f};
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light0Diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light0Specular);
+
+    GLfloat light1Diffuse[] = {0.25f, 0.33f, 0.45f, 1.0f};
+    GLfloat light1Specular[] = {0.10f, 0.12f, 0.18f, 1.0f};
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, light1Diffuse);
+    glLightfv(GL_LIGHT1, GL_SPECULAR, light1Specular);
+
+    initTextures();
     glClearColor(0.70f, 0.85f, 0.95f, 1.0f);
 
     glMatrixMode(GL_PROJECTION);
