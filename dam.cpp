@@ -4,7 +4,7 @@
 int angleX = 20;
 int angleY = -30;
 
-int camZ = 25;
+int camZ = 30;
 
 int waterHeight = 5;
 
@@ -54,7 +54,7 @@ void drawCuboid(float x, float y, float z, float w, float h, float d) {
 
 void drawGround() {
     glColor3f(0.45f, 0.35f, 0.25f); // Riverbed dirt/brown color
-    drawCuboid(-15, -1, -24, 30, 1, 48);
+    drawCuboid(-24, -1, -33, 42, 1, 66);
 }
 
 void drawDam() {
@@ -88,7 +88,7 @@ void drawDam() {
 void drawReservoirWater() {
     glColor3f(0.10f, 0.34f, 0.66f);
 
-    float xL = -15.0f;
+    float xL = -24.0f;
     float xR0 = 0.5f;
     float xR1 = 0.5f + waterHeight / 8.0f;
     float y0 = 0.0f, y1 = (float)waterHeight;
@@ -186,15 +186,15 @@ void drawOutflowWater() {
 void drawHills() {
     glColor3f(0.38f, 0.56f, 0.30f); // Hill color (green)
 
-    float x0 = -15.0f, x1 = 15.0f;
+    float x0 = -24.0f, x1 = 18.0f;
     float y0 = 0.0f, y1 = 8.0f;
     
     // Keep hills very slightly outside dam/water planes to avoid z-fighting.
     float sideInset = 0.15f;
     float z0_y0 = -9.0f - sideInset, z1_y0 = 9.0f + sideInset;
     float z0_y1 = -18.0f - sideInset, z1_y1 = 18.0f + sideInset;
-    float zOuterL = -24.0f;
-    float zOuterR = 24.0f;
+    float zOuterL = -33.0f;
+    float zOuterR = 33.0f;
 
     glBegin(GL_QUADS);
     // Left hill slope (touches dam/water at z0_yX)
@@ -275,7 +275,7 @@ void mouse(int button, int state, int x, int y) {
         if (button == 4) camZ += 1;
 
         if (camZ < 10) camZ = 10;
-        if (camZ > 40) camZ = 40;
+        if (camZ > 80) camZ = 80;
 
         glutPostRedisplay();
     }
@@ -289,19 +289,30 @@ void init() {
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(60, 1, 1, 100);
+    gluPerspective(60, 1.6f, 1, 200);
 
+    glMatrixMode(GL_MODELVIEW);
+}
+
+void reshape(int w, int h) {
+    if (h == 0) h = 1;
+
+    glViewport(0, 0, w, h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(60, (float)w / (float)h, 1, 200);
     glMatrixMode(GL_MODELVIEW);
 }
 
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH | GLUT_MULTISAMPLE);
-    glutInitWindowSize(700, 700);
+    glutInitWindowSize(1280, 800);
     glutCreateWindow("3D Dam Reservoir Simulator");
 
     init();
     glutDisplayFunc(display);
+    glutReshapeFunc(reshape);
     glutKeyboardFunc(keyboard);
     glutMouseFunc(mouse);
 
