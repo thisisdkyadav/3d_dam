@@ -201,6 +201,53 @@ void drawDam() {
     endTexturedDraw();
 }
 
+void drawDamTopDetails() {
+    glDisable(GL_TEXTURE_2D);
+
+    // Keep detail geometry locked to the dam's exact top dimensions.
+    const float xL = 0.5f;
+    const float xR = 4.0f;
+    const float yTop = 8.0f;
+    const float zMin = -18.0f;
+    const float zMax = 18.0f;
+
+    // Full crest deck so the top is completely covered.
+    glColor3f(0.42f, 0.43f, 0.45f);
+    setSpecular(0.28f, 28.0f);
+    drawCuboid(
+        xL,
+        yTop + 0.02f,
+        zMin,
+        (xR - xL),
+        0.18f,
+        (zMax - zMin)
+    );
+
+    // Guard rails and posts aligned exactly end-to-end with dam sides.
+    glColor3f(0.76f, 0.76f, 0.74f);
+    setSpecular(0.36f, 38.0f);
+    const float railZ0 = zMin;
+    const float railLen = (zMax - zMin);
+    const float postSize = 0.07f;
+    drawCuboid(xL + 0.18f, yTop + 0.60f, railZ0, postSize, 0.07f, railLen);
+    drawCuboid(xR - 0.25f, yTop + 0.60f, railZ0, postSize, 0.07f, railLen);
+
+    for (int i = 0; i < 12; i++) {
+        float z = zMin + i * ((zMax - zMin - postSize) / 11.0f);
+        drawCuboid(xL + 0.18f, yTop + 0.24f, z, postSize, 0.36f, postSize);
+        drawCuboid(xR - 0.25f, yTop + 0.24f, z, postSize, 0.36f, postSize);
+    }
+
+    // Center paint markers kept inside full deck bounds.
+    glColor3f(0.90f, 0.79f, 0.22f);
+    setSpecular(0.08f, 6.0f);
+    float centerX = (xL + xR) * 0.5f;
+    for (int i = 0; i < 8; i++) {
+        float z = zMin + 2.6f + i * 4.0f;
+        drawCuboid(centerX - 0.06f, yTop + 0.23f, z, 0.12f, 0.02f, 1.7f);
+    }
+}
+
 void drawReservoirWater() {
     glDisable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
@@ -479,22 +526,6 @@ void drawSideScenery() {
         drawTree(x, y, z, s);
     }
 
-    const float rockData[][5] = {
-        {-17.0f, -19.5f, 1.8f, 0.9f, 1.3f}, {-9.0f, -18.8f, 1.4f, 0.8f, 1.0f}, {3.0f, -19.0f, 1.7f, 1.0f, 1.1f},
-        {-14.0f, 19.2f, 1.6f, 0.8f, 1.2f}, {-5.0f, 18.9f, 1.3f, 0.7f, 1.0f}, {7.0f, 19.4f, 1.9f, 1.0f, 1.4f}
-    };
-
-    for (int i = 0; i < 6; i++) {
-        float x = rockData[i][0];
-        float z = rockData[i][1];
-        float sx = rockData[i][2];
-        float sy = rockData[i][3];
-        float sz = rockData[i][4];
-        float y = getHillSurfaceY(z) + 0.01f;
-
-        drawRock(x, y, z, sx, sy, sz);
-        drawRock(x + 0.5f, y + 0.02f, z + 0.4f, sx * 0.55f, sy * 0.7f, sz * 0.6f);
-    }
 }
 
 void display() {
@@ -521,6 +552,7 @@ void display() {
     drawSideScenery();
     drawReservoirWater();
     drawDam();
+    drawDamTopDetails();
     drawGates();
     drawSupportWalls();
     drawOutflowWater();
