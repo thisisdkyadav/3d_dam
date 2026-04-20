@@ -159,7 +159,7 @@ void drawGround() {
     glColor3f(0.45f, 0.35f, 0.25f); // Riverbed dirt/brown color
     setSpecular(0.08f, 8.0f);
     beginTexturedDraw(groundTexture, 0.12f, 0.12f);
-    drawCuboid(-24, -1, -33, 42, 1, 66);
+    drawCuboid(-40, -1, -50, 74, 1, 100);
     endTexturedDraw();
 }
 
@@ -256,7 +256,7 @@ void drawReservoirWater() {
     glColor4f(0.10f, 0.34f, 0.66f, 0.80f);
     setSpecular(0.65f, 96.0f);
 
-    float xL = -24.0f;
+    float xL = -40.0f;
     float xR0 = 0.5f;
     float xR1 = 0.5f + waterHeight / 8.0f;
     float y0 = 0.0f, y1 = (float)waterHeight;
@@ -343,7 +343,7 @@ void drawOutflowWater() {
         float y0 = 0.0f;
         float outflowHeight = gateOpen / 2.0f + 0.5f;
         float x0 = 4.0f;
-        float x1 = 10.0f;
+        float x1 = 34.0f;
         
         float z0_y0 = -9.0f, z1_y0 = 9.0f;
         
@@ -383,15 +383,15 @@ void drawHills() {
     setSpecular(0.12f, 12.0f);
     beginTexturedDraw(hillTexture, 0.10f, 0.10f);
 
-    float x0 = -24.0f, x1 = 18.0f;
+    float x0 = -40.0f, x1 = 34.0f;
     float y0 = 0.0f, y1 = 8.0f;
     
     // Keep hills very slightly outside dam/water planes to avoid z-fighting.
     float sideInset = 0.15f;
     float z0_y0 = -9.0f - sideInset, z1_y0 = 9.0f + sideInset;
     float z0_y1 = -18.0f - sideInset, z1_y1 = 18.0f + sideInset;
-    float zOuterL = -33.0f;
-    float zOuterR = 33.0f;
+    float zOuterL = -50.0f;
+    float zOuterR = 50.0f;
 
     glBegin(GL_QUADS);
     // Left hill slope (touches dam/water at z0_yX)
@@ -433,7 +433,7 @@ float getHillSurfaceY(float z) {
     const float sideInset = 0.15f;
     const float inner = 9.0f + sideInset;
     const float outer = 18.0f + sideInset;
-    const float farSide = 33.0f;
+    const float farSide = 50.0f;
 
     if (z <= -outer && z >= -farSide) return 8.0f;
     if (z >= outer && z <= farSide) return 8.0f;
@@ -515,19 +515,41 @@ void drawMountainStrip() {
 }
 
 void drawSideScenery() {
-    const float treeData[][3] = {
-        {-20.0f, -30.0f, 1.00f}, {-15.0f, -27.0f, 0.92f}, {-10.0f, -25.0f, 1.10f}, {-6.0f, -22.0f, 0.88f},
-        {2.0f, -28.0f, 0.95f}, {8.0f, -24.0f, 1.02f}, {13.5f, -20.0f, 0.85f},
-        {-18.0f, 30.0f, 1.04f}, {-12.0f, 26.0f, 0.90f}, {-7.0f, 23.0f, 1.08f}, {-2.0f, 21.0f, 0.84f},
-        {5.0f, 28.0f, 0.96f}, {10.5f, 24.0f, 1.00f}, {15.0f, 20.0f, 0.82f}
+    const float xMin = -36.0f;
+    const float xMax = 32.0f;
+    const float zNegMin = -49.0f;
+    const float zNegMax = -22.0f;
+    const float zPosMin = 22.0f;
+    const float zPosMax = 49.0f;
+    const int treesPerSide = 28;
+
+    // Deterministic pseudo-random value in [0, 1), stable every frame.
+    auto prand01 = [](int seed) {
+        float v = sinf(seed * 12.9898f) * 43758.5453f;
+        return v - floorf(v);
     };
 
-    for (int i = 0; i < 14; i++) {
-        float x = treeData[i][0];
-        float z = treeData[i][1];
-        float s = treeData[i][2];
-        float y = getHillSurfaceY(z) + 0.02f;
-        drawTree(x, y, z, s);
+    for (int side = 0; side < 2; side++) {
+        float zMin = (side == 0) ? zNegMin : zPosMin;
+        float zMax = (side == 0) ? zNegMax : zPosMax;
+
+        int placed = 0;
+        int attempts = 0;
+        while (placed < treesPerSide && attempts < 300) {
+            int seed = 1300 + side * 700 + attempts * 29;
+            float x = xMin + prand01(seed + 3) * (xMax - xMin);
+            float z = zMin + prand01(seed + 7) * (zMax - zMin);
+            float s = 0.78f + prand01(seed + 13) * 0.42f;
+            float y = getHillSurfaceY(z) + 0.02f;
+
+            // Keep trees mostly on hillside/plateau and avoid obvious rows near water edge.
+            if (y > 0.22f) {
+                drawTree(x, y, z, s);
+                placed++;
+            }
+
+            attempts++;
+        }
     }
 
 }
