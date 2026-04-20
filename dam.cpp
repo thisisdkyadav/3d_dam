@@ -252,6 +252,7 @@ void drawReservoirWater() {
     glDisable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
     glColor4f(0.10f, 0.34f, 0.66f, 0.80f);
     setSpecular(0.65f, 96.0f);
 
@@ -287,6 +288,7 @@ void drawReservoirWater() {
     glEnd();
 
     glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
 }
 
 void drawSingleGate(float zCenter, float gateWidth) {
@@ -334,6 +336,7 @@ void drawOutflowWater() {
         glDisable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthMask(GL_FALSE);
         glColor4f(0.34f, 0.70f, 0.92f, 0.78f);
         setSpecular(0.55f, 72.0f);
         
@@ -371,6 +374,7 @@ void drawOutflowWater() {
         glEnd();
 
         glDisable(GL_BLEND);
+        glDepthMask(GL_TRUE);
     }
 }
 
@@ -546,15 +550,14 @@ void display() {
     glRotatef(angleX, 1, 0, 0);
     glRotatef(angleY, 0, 1, 0);
 
-    drawMountainStrip();
     drawGround();
     drawHills();
     drawSideScenery();
-    drawReservoirWater();
     drawDam();
     drawDamTopDetails();
     drawGates();
     drawSupportWalls();
+    drawReservoirWater();
     drawOutflowWater();
 
     glutSwapBuffers();
