@@ -378,6 +378,125 @@ void drawHills() {
     endTexturedDraw();
 }
 
+float getHillSurfaceY(float z) {
+    const float sideInset = 0.15f;
+    const float inner = 9.0f + sideInset;
+    const float outer = 18.0f + sideInset;
+    const float farSide = 33.0f;
+
+    if (z <= -outer && z >= -farSide) return 8.0f;
+    if (z >= outer && z <= farSide) return 8.0f;
+
+    if (z < -inner && z > -outer) {
+        return ((-z - inner) / (outer - inner)) * 8.0f;
+    }
+
+    if (z > inner && z < outer) {
+        return ((z - inner) / (outer - inner)) * 8.0f;
+    }
+
+    return 0.0f;
+}
+
+void drawTree(float x, float y, float z, float scale) {
+    glDisable(GL_TEXTURE_2D);
+
+    glColor3f(0.34f, 0.24f, 0.14f);
+    setSpecular(0.08f, 8.0f);
+    drawCuboid(
+        x - 0.12f * scale,
+        y,
+        z - 0.12f * scale,
+        0.24f * scale,
+        1.8f * scale,
+        0.24f * scale
+    );
+
+    glColor3f(0.14f, 0.44f, 0.16f);
+    setSpecular(0.12f, 10.0f);
+    glPushMatrix();
+    glTranslatef(x, y + 1.8f * scale, z);
+    glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+    glutSolidCone(0.85f * scale, 2.0f * scale, 12, 8);
+    glPopMatrix();
+
+    glColor3f(0.11f, 0.36f, 0.14f);
+    glPushMatrix();
+    glTranslatef(x, y + 2.6f * scale, z);
+    glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+    glutSolidCone(0.62f * scale, 1.5f * scale, 12, 8);
+    glPopMatrix();
+}
+
+void drawRock(float x, float y, float z, float sx, float sy, float sz) {
+    glDisable(GL_TEXTURE_2D);
+    glColor3f(0.44f, 0.43f, 0.41f);
+    setSpecular(0.18f, 18.0f);
+    drawCuboid(x - sx * 0.5f, y, z - sz * 0.5f, sx, sy, sz);
+}
+
+void drawMountainStrip() {
+    glDisable(GL_TEXTURE_2D);
+    setSpecular(0.06f, 6.0f);
+
+    const float x = -70.0f;
+    const float baseY = -1.0f;
+    const float zVals[] = {-74.0f, -58.0f, -42.0f, -26.0f, -10.0f, 6.0f, 22.0f, 38.0f, 54.0f, 70.0f};
+    const float peaks[] = {16.0f, 22.0f, 18.0f, 25.0f, 19.0f, 24.0f, 20.0f, 26.0f, 19.0f, 17.0f};
+
+    glColor3f(0.34f, 0.41f, 0.45f);
+    glBegin(GL_TRIANGLE_STRIP);
+    glNormal3f(1.0f, 0.10f, 0.0f);
+    for (int i = 0; i < 10; i++) {
+        glVertex3f(x, baseY, zVals[i]);
+        glVertex3f(x, peaks[i], zVals[i]);
+    }
+    glEnd();
+
+    glColor3f(0.62f, 0.66f, 0.69f);
+    glBegin(GL_TRIANGLE_STRIP);
+    glNormal3f(1.0f, 0.20f, 0.0f);
+    for (int i = 0; i < 10; i++) {
+        glVertex3f(x + 0.2f, peaks[i] - 2.4f, zVals[i]);
+        glVertex3f(x + 0.2f, peaks[i], zVals[i]);
+    }
+    glEnd();
+}
+
+void drawSideScenery() {
+    const float treeData[][3] = {
+        {-20.0f, -30.0f, 1.00f}, {-15.0f, -27.0f, 0.92f}, {-10.0f, -25.0f, 1.10f}, {-6.0f, -22.0f, 0.88f},
+        {2.0f, -28.0f, 0.95f}, {8.0f, -24.0f, 1.02f}, {13.5f, -20.0f, 0.85f},
+        {-18.0f, 30.0f, 1.04f}, {-12.0f, 26.0f, 0.90f}, {-7.0f, 23.0f, 1.08f}, {-2.0f, 21.0f, 0.84f},
+        {5.0f, 28.0f, 0.96f}, {10.5f, 24.0f, 1.00f}, {15.0f, 20.0f, 0.82f}
+    };
+
+    for (int i = 0; i < 14; i++) {
+        float x = treeData[i][0];
+        float z = treeData[i][1];
+        float s = treeData[i][2];
+        float y = getHillSurfaceY(z) + 0.02f;
+        drawTree(x, y, z, s);
+    }
+
+    const float rockData[][5] = {
+        {-17.0f, -19.5f, 1.8f, 0.9f, 1.3f}, {-9.0f, -18.8f, 1.4f, 0.8f, 1.0f}, {3.0f, -19.0f, 1.7f, 1.0f, 1.1f},
+        {-14.0f, 19.2f, 1.6f, 0.8f, 1.2f}, {-5.0f, 18.9f, 1.3f, 0.7f, 1.0f}, {7.0f, 19.4f, 1.9f, 1.0f, 1.4f}
+    };
+
+    for (int i = 0; i < 6; i++) {
+        float x = rockData[i][0];
+        float z = rockData[i][1];
+        float sx = rockData[i][2];
+        float sy = rockData[i][3];
+        float sz = rockData[i][4];
+        float y = getHillSurfaceY(z) + 0.01f;
+
+        drawRock(x, y, z, sx, sy, sz);
+        drawRock(x + 0.5f, y + 0.02f, z + 0.4f, sx * 0.55f, sy * 0.7f, sz * 0.6f);
+    }
+}
+
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
@@ -396,8 +515,10 @@ void display() {
     glRotatef(angleX, 1, 0, 0);
     glRotatef(angleY, 0, 1, 0);
 
+    drawMountainStrip();
     drawGround();
     drawHills();
+    drawSideScenery();
     drawReservoirWater();
     drawDam();
     drawGates();
