@@ -110,42 +110,42 @@ void setSpecular(float intensity, float shininess) {
 void drawCuboid(float x, float y, float z, float w, float h, float d) {
     glBegin(GL_QUADS);
 
-    // Front
+    
     glNormal3f(0.0f, 0.0f, 1.0f);
     glVertex3f(x,     y,     z + d);
     glVertex3f(x + w, y,     z + d);
     glVertex3f(x + w, y + h, z + d);
     glVertex3f(x,     y + h, z + d);
 
-    // Back
+    
     glNormal3f(0.0f, 0.0f, -1.0f);
     glVertex3f(x,     y,     z);
     glVertex3f(x,     y + h, z);
     glVertex3f(x + w, y + h, z);
     glVertex3f(x + w, y,     z);
 
-    // Left
+    
     glNormal3f(-1.0f, 0.0f, 0.0f);
     glVertex3f(x, y,     z);
     glVertex3f(x, y,     z + d);
     glVertex3f(x, y + h, z + d);
     glVertex3f(x, y + h, z);
 
-    // Right
+    
     glNormal3f(1.0f, 0.0f, 0.0f);
     glVertex3f(x + w, y,     z);
     glVertex3f(x + w, y + h, z);
     glVertex3f(x + w, y + h, z + d);
     glVertex3f(x + w, y,     z + d);
 
-    // Top
+    
     glNormal3f(0.0f, 1.0f, 0.0f);
     glVertex3f(x,     y + h, z);
     glVertex3f(x,     y + h, z + d);
     glVertex3f(x + w, y + h, z + d);
     glVertex3f(x + w, y + h, z);
 
-    // Bottom
+    
     glNormal3f(0.0f, -1.0f, 0.0f);
     glVertex3f(x,     y, z);
     glVertex3f(x + w, y, z);
@@ -156,7 +156,7 @@ void drawCuboid(float x, float y, float z, float w, float h, float d) {
 }
 
 void drawGround() {
-    glColor3f(0.45f, 0.35f, 0.25f); // Riverbed dirt/brown color
+    glColor3f(0.45f, 0.35f, 0.25f); 
     setSpecular(0.08f, 8.0f);
     beginTexturedDraw(groundTexture, 0.12f, 0.12f);
     drawCuboid(-40, -1, -50, 74, 1, 100);
@@ -172,28 +172,28 @@ void drawDam() {
     float xR = 4.0f;
     float y0 = 0.0f, y1 = 8.0f;
     
-    // Inclined sides for the dam
+    
     float z0_y0 = -9.0f, z1_y0 = 9.0f;
     float z0_y1 = -18.0f, z1_y1 = 18.0f;
 
     glBegin(GL_QUADS);
-    // Top
+    
     setNormalFromTriangle(xL0, y1, z1_y1, xR, y1, z1_y1, xR, y1, z0_y1);
     glVertex3f(xL0, y1, z1_y1); glVertex3f(xR, y1, z1_y1); glVertex3f(xR, y1, z0_y1); glVertex3f(xL0, y1, z0_y1);
-    // Bottom
+    
     setNormalFromTriangle(xL0, y0, z0_y0, xR, y0, z0_y0, xR, y0, z1_y0);
     glVertex3f(xL0, y0, z0_y0); glVertex3f(xR, y0, z0_y0); glVertex3f(xR, y0, z1_y0); glVertex3f(xL0, y0, z1_y0);
-    // Front facing water
+    
     setNormalFromTriangle(xL0, y0, z1_y0, xL1, y1, z1_y1, xL1, y1, z0_y1);
     glVertex3f(xL0, y0, z1_y0); glVertex3f(xL1, y1, z1_y1); glVertex3f(xL1, y1, z0_y1); glVertex3f(xL0, y0, z0_y0);
-    // Back block (spillway slope)
+    
     setNormalFromTriangle(xR, y0, z0_y0, xR, y1, z0_y1, xR, y1, z1_y1);
     glVertex3f(xR, y0, z0_y0); glVertex3f(xR, y1, z0_y1); glVertex3f(xR, y1, z1_y1); glVertex3f(xR, y0, z1_y0);
     
-    // Left side (inclined)
+    
     setNormalFromTriangle(xL0, y0, z0_y0, xL1, y1, z0_y1, xR, y1, z0_y1);
     glVertex3f(xL0, y0, z0_y0); glVertex3f(xL1, y1, z0_y1); glVertex3f(xR, y1, z0_y1); glVertex3f(xR, y0, z0_y0);
-    // Right side (inclined)
+    
     setNormalFromTriangle(xR, y0, z1_y0, xR, y1, z1_y1, xL1, y1, z1_y1);
     glVertex3f(xR, y0, z1_y0); glVertex3f(xR, y1, z1_y1); glVertex3f(xL1, y1, z1_y1); glVertex3f(xL0, y0, z1_y0);
     glEnd();
@@ -204,14 +204,14 @@ void drawDam() {
 void drawDamTopDetails() {
     glDisable(GL_TEXTURE_2D);
 
-    // Keep detail geometry locked to the dam's exact top dimensions.
+    
     const float xL = 0.5f;
     const float xR = 4.0f;
     const float yTop = 8.0f;
     const float zMin = -18.0f;
     const float zMax = 18.0f;
 
-    // Full crest deck so the top is completely covered.
+    
     glColor3f(0.42f, 0.43f, 0.45f);
     setSpecular(0.28f, 28.0f);
     drawCuboid(
@@ -223,7 +223,7 @@ void drawDamTopDetails() {
         (zMax - zMin)
     );
 
-    // Guard rails and posts aligned exactly end-to-end with dam sides.
+    
     glColor3f(0.76f, 0.76f, 0.74f);
     setSpecular(0.36f, 38.0f);
     const float railZ0 = zMin;
@@ -238,7 +238,7 @@ void drawDamTopDetails() {
         drawCuboid(xR - 0.25f, yTop + 0.24f, z, postSize, 0.36f, postSize);
     }
 
-    // Center paint markers kept inside full deck bounds.
+    
     glColor3f(0.90f, 0.79f, 0.22f);
     setSpecular(0.08f, 6.0f);
     float centerX = (xL + xR) * 0.5f;
@@ -266,23 +266,23 @@ void drawReservoirWater() {
     float z1_y1 = 9.0f + (waterHeight * 9.0f / 8.0f);
 
     glBegin(GL_QUADS);
-    // Top
+    
     setNormalFromTriangle(xL, y1, z1_y1, xR1, y1, z1_y1, xR1, y1, z0_y1);
     glVertex3f(xL, y1, z1_y1); glVertex3f(xR1, y1, z1_y1); glVertex3f(xR1, y1, z0_y1); glVertex3f(xL, y1, z0_y1);
-    // Bottom
+    
     setNormalFromTriangle(xL, y0, z0_y0, xL, y0, z1_y0, xR0, y0, z1_y0);
     glVertex3f(xL, y0, z0_y0); glVertex3f(xL, y0, z1_y0); glVertex3f(xR0, y0, z1_y0); glVertex3f(xR0, y0, z0_y0);
-    // Front face against dam
+    
     setNormalFromTriangle(xR0, y0, z0_y0, xR0, y0, z1_y0, xR1, y1, z1_y1);
     glVertex3f(xR0, y0, z0_y0); glVertex3f(xR0, y0, z1_y0); glVertex3f(xR1, y1, z1_y1); glVertex3f(xR1, y1, z0_y1);
-    // Back face (far water edge)
+    
     setNormalFromTriangle(xL, y0, z1_y0, xL, y0, z0_y0, xL, y1, z0_y1);
     glVertex3f(xL, y0, z1_y0); glVertex3f(xL, y0, z0_y0); glVertex3f(xL, y1, z0_y1); glVertex3f(xL, y1, z1_y1);
     
-    // Left edge (inclined)
+    
     setNormalFromTriangle(xL, y1, z0_y1, xR1, y1, z0_y1, xR0, y0, z0_y0);
     glVertex3f(xL, y1, z0_y1); glVertex3f(xR1, y1, z0_y1); glVertex3f(xR0, y0, z0_y0); glVertex3f(xL, y0, z0_y0);
-    // Right edge (inclined)
+    
     setNormalFromTriangle(xL, y0, z1_y0, xR0, y0, z1_y0, xR1, y1, z1_y1);
     glVertex3f(xL, y0, z1_y0); glVertex3f(xR0, y0, z1_y0); glVertex3f(xR1, y1, z1_y1); glVertex3f(xL, y1, z1_y1);
     glEnd();
@@ -347,28 +347,28 @@ void drawOutflowWater() {
         
         float z0_y0 = -9.0f, z1_y0 = 9.0f;
         
-        // Outflow water slope based on hills at its short height
+        
         float z0_y1 = -9.0f - (outflowHeight * 9.0f / 8.0f);
         float z1_y1 = 9.0f + (outflowHeight * 9.0f / 8.0f);
 
         glBegin(GL_QUADS);
-        // Top
+        
         setNormalFromTriangle(x0, outflowHeight, z1_y1, x1, outflowHeight, z1_y1, x1, outflowHeight, z0_y1);
         glVertex3f(x0, outflowHeight, z1_y1); glVertex3f(x1, outflowHeight, z1_y1); glVertex3f(x1, outflowHeight, z0_y1); glVertex3f(x0, outflowHeight, z0_y1);
-        // Bottom
+        
         setNormalFromTriangle(x0, y0, z0_y0, x1, y0, z0_y0, x1, y0, z1_y0);
         glVertex3f(x0, y0, z0_y0); glVertex3f(x1, y0, z0_y0); glVertex3f(x1, y0, z1_y0); glVertex3f(x0, y0, z1_y0);
-        // Front face (against the gates/dam base)
+        
         setNormalFromTriangle(x0, y0, z0_y0, x0, y0, z1_y0, x0, outflowHeight, z1_y1);
         glVertex3f(x0, y0, z0_y0); glVertex3f(x0, y0, z1_y0); glVertex3f(x0, outflowHeight, z1_y1); glVertex3f(x0, outflowHeight, z0_y1);
-        // Back edge (flowing out)
+        
         setNormalFromTriangle(x1, y0, z1_y0, x1, y0, z0_y0, x1, outflowHeight, z0_y1);
         glVertex3f(x1, y0, z1_y0); glVertex3f(x1, y0, z0_y0); glVertex3f(x1, outflowHeight, z0_y1); glVertex3f(x1, outflowHeight, z1_y1);
         
-        // Left side (inclined to meet hill)
+        
         setNormalFromTriangle(x0, y0, z0_y0, x1, y0, z0_y0, x1, outflowHeight, z0_y1);
         glVertex3f(x0, y0, z0_y0); glVertex3f(x1, y0, z0_y0); glVertex3f(x1, outflowHeight, z0_y1); glVertex3f(x0, outflowHeight, z0_y1);
-        // Right side (inclined to meet hill)
+        
         setNormalFromTriangle(x1, y0, z1_y0, x0, y0, z1_y0, x0, outflowHeight, z1_y1);
         glVertex3f(x1, y0, z1_y0); glVertex3f(x0, y0, z1_y0); glVertex3f(x0, outflowHeight, z1_y1); glVertex3f(x1, outflowHeight, z1_y1);
         glEnd();
@@ -379,14 +379,14 @@ void drawOutflowWater() {
 }
 
 void drawHills() {
-    glColor3f(0.38f, 0.56f, 0.30f); // Hill color (green)
+    glColor3f(0.38f, 0.56f, 0.30f); 
     setSpecular(0.12f, 12.0f);
     beginTexturedDraw(hillTexture, 0.10f, 0.10f);
 
     float x0 = -40.0f, x1 = 34.0f;
     float y0 = 0.0f, y1 = 8.0f;
     
-    // Keep hills very slightly outside dam/water planes to avoid z-fighting.
+    
     float sideInset = 0.15f;
     float z0_y0 = -9.0f - sideInset, z1_y0 = 9.0f + sideInset;
     float z0_y1 = -18.0f - sideInset, z1_y1 = 18.0f + sideInset;
@@ -394,32 +394,32 @@ void drawHills() {
     float zOuterR = 50.0f;
 
     glBegin(GL_QUADS);
-    // Left hill slope (touches dam/water at z0_yX)
+    
     setNormalFromTriangle(x0, y1, zOuterL, x1, y1, zOuterL, x1, y1, z0_y1);
-    glVertex3f(x0, y1, zOuterL); glVertex3f(x1, y1, zOuterL); glVertex3f(x1, y1, z0_y1); glVertex3f(x0, y1, z0_y1); // Top flat part of hill
+    glVertex3f(x0, y1, zOuterL); glVertex3f(x1, y1, zOuterL); glVertex3f(x1, y1, z0_y1); glVertex3f(x0, y1, z0_y1); 
     setNormalFromTriangle(x0, y1, z0_y1, x1, y1, z0_y1, x1, y0, z0_y0);
-    glVertex3f(x0, y1, z0_y1); glVertex3f(x1, y1, z0_y1); glVertex3f(x1, y0, z0_y0); glVertex3f(x0, y0, z0_y0); // Sloping down to water
+    glVertex3f(x0, y1, z0_y1); glVertex3f(x1, y1, z0_y1); glVertex3f(x1, y0, z0_y0); glVertex3f(x0, y0, z0_y0); 
     
-    // Right hill slope (touches dam/water at z1_yX)
+    
     setNormalFromTriangle(x0, y0, z1_y0, x1, y0, z1_y0, x1, y1, z1_y1);
-    glVertex3f(x0, y0, z1_y0); glVertex3f(x1, y0, z1_y0); glVertex3f(x1, y1, z1_y1); glVertex3f(x0, y1, z1_y1); // Sloping UP from water
+    glVertex3f(x0, y0, z1_y0); glVertex3f(x1, y0, z1_y0); glVertex3f(x1, y1, z1_y1); glVertex3f(x0, y1, z1_y1); 
     setNormalFromTriangle(x0, y1, z1_y1, x1, y1, z1_y1, x1, y1, zOuterR);
-    glVertex3f(x0, y1, z1_y1); glVertex3f(x1, y1, z1_y1); glVertex3f(x1, y1, zOuterR); glVertex3f(x0, y1, zOuterR); // Top flat part of hill
+    glVertex3f(x0, y1, z1_y1); glVertex3f(x1, y1, z1_y1); glVertex3f(x1, y1, zOuterR); glVertex3f(x0, y1, zOuterR); 
     
-    // Left hill outer edge (back face)
+    
     setNormalFromTriangle(x0, y0, zOuterL, x1, y0, zOuterL, x1, y1, zOuterL);
     glVertex3f(x0, y0, zOuterL); glVertex3f(x1, y0, zOuterL); glVertex3f(x1, y1, zOuterL); glVertex3f(x0, y1, zOuterL);
-    // Right hill outer edge (back face)
+    
     setNormalFromTriangle(x0, y0, zOuterR, x1, y0, zOuterR, x1, y1, zOuterR);
     glVertex3f(x0, y0, zOuterR); glVertex3f(x1, y0, zOuterR); glVertex3f(x1, y1, zOuterR); glVertex3f(x0, y1, zOuterR);
     
-    // Left hill end caps (Front/Back)
+    
     setNormalFromTriangle(x0, y0, z0_y0, x0, y1, z0_y1, x0, y1, zOuterL);
     glVertex3f(x0, y0, z0_y0); glVertex3f(x0, y1, z0_y1); glVertex3f(x0, y1, zOuterL); glVertex3f(x0, y0, zOuterL);
     setNormalFromTriangle(x1, y0, z0_y0, x1, y0, zOuterL, x1, y1, zOuterL);
     glVertex3f(x1, y0, z0_y0); glVertex3f(x1, y0, zOuterL); glVertex3f(x1, y1, zOuterL); glVertex3f(x1, y1, z0_y1);
 
-    // Right hill end caps (Front/Back)
+    
     setNormalFromTriangle(x0, y0, z1_y0, x0, y0, zOuterR, x0, y1, zOuterR);
     glVertex3f(x0, y0, z1_y0); glVertex3f(x0, y0, zOuterR); glVertex3f(x0, y1, zOuterR); glVertex3f(x0, y1, z1_y1);
     setNormalFromTriangle(x1, y0, z1_y0, x1, y1, z1_y1, x1, y1, zOuterR);
@@ -479,41 +479,6 @@ void drawTree(float x, float y, float z, float scale) {
     glPopMatrix();
 }
 
-void drawRock(float x, float y, float z, float sx, float sy, float sz) {
-    glDisable(GL_TEXTURE_2D);
-    glColor3f(0.44f, 0.43f, 0.41f);
-    setSpecular(0.18f, 18.0f);
-    drawCuboid(x - sx * 0.5f, y, z - sz * 0.5f, sx, sy, sz);
-}
-
-void drawMountainStrip() {
-    glDisable(GL_TEXTURE_2D);
-    setSpecular(0.06f, 6.0f);
-
-    const float x = -70.0f;
-    const float baseY = -1.0f;
-    const float zVals[] = {-74.0f, -58.0f, -42.0f, -26.0f, -10.0f, 6.0f, 22.0f, 38.0f, 54.0f, 70.0f};
-    const float peaks[] = {16.0f, 22.0f, 18.0f, 25.0f, 19.0f, 24.0f, 20.0f, 26.0f, 19.0f, 17.0f};
-
-    glColor3f(0.34f, 0.41f, 0.45f);
-    glBegin(GL_TRIANGLE_STRIP);
-    glNormal3f(1.0f, 0.10f, 0.0f);
-    for (int i = 0; i < 10; i++) {
-        glVertex3f(x, baseY, zVals[i]);
-        glVertex3f(x, peaks[i], zVals[i]);
-    }
-    glEnd();
-
-    glColor3f(0.62f, 0.66f, 0.69f);
-    glBegin(GL_TRIANGLE_STRIP);
-    glNormal3f(1.0f, 0.20f, 0.0f);
-    for (int i = 0; i < 10; i++) {
-        glVertex3f(x + 0.2f, peaks[i] - 2.4f, zVals[i]);
-        glVertex3f(x + 0.2f, peaks[i], zVals[i]);
-    }
-    glEnd();
-}
-
 void drawSideScenery() {
     const float xMin = -36.0f;
     const float xMax = 32.0f;
@@ -523,7 +488,7 @@ void drawSideScenery() {
     const float zPosMax = 49.0f;
     const int treesPerSide = 28;
 
-    // Deterministic pseudo-random value in [0, 1), stable every frame.
+    
     auto prand01 = [](int seed) {
         float v = sinf(seed * 12.9898f) * 43758.5453f;
         return v - floorf(v);
@@ -542,7 +507,7 @@ void drawSideScenery() {
             float s = 0.78f + prand01(seed + 13) * 0.42f;
             float y = getHillSurfaceY(z) + 0.02f;
 
-            // Keep trees mostly on hillside/plateau and avoid obvious rows near water edge.
+            
             if (y > 0.22f) {
                 drawTree(x, y, z, s);
                 placed++;
